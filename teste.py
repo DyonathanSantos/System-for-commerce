@@ -9,5 +9,5 @@ from crud import *
 #listar_itens_comanda(1)
 #comanda_clear(1)
 #fechar_comanda(1)
-abrir_comanda("Pedro",7-9-2025)
+#abrir_comanda("Pedro",7-9-2025)
 
