@@ -2,10 +2,9 @@
 
 import sqlite3
 from datetime import datetime
-
+import pandas as pd
 # ESTABELECENDO CONEXÃO
-
-con = sqlite3.connect('bar.db')
+con = sqlite3.connect('bar.db',check_same_thread=False)
 
 #CURSOR OF SQLITE3
 cursor = con.cursor()
@@ -13,10 +12,10 @@ cursor = con.cursor()
 #C = CREATE OF CRUD -------------------------------------------------------------------------------
 
 def adicionar_estoque(produto, tipo, quantidade, preco, preco_venda): #check
-    cursor.execute("INSERT INTO estoque (produto, tipo, quantidade, preco, preco_venda) VALUES (?, ?, ?, ?, ?)",(produto.lower(), tipo.lower(), quantidade, preco, preco_venda))
+    cursor.execute("INSERT INTO estoque (produto, tipo, quantidade, preco, preco_venda) VALUES (?, ?, ?, ?, ?)",(produto.upper(), tipo.upper(), quantidade, preco, preco_venda))
     con.commit()
     print(f"Produto '{produto}' adicionado com sucesso!")
-    con.close()
+    
 
 def abrir_comanda (nome,data): #check
 
@@ -25,7 +24,7 @@ def abrir_comanda (nome,data): #check
     con.commit()
     comanda_id = cursor.lastrowid
     print(f"✅ Comanda {comanda_id} aberta para {nome}")
-    con.close()
+    
     return comanda_id
 
 #R = READ OF CRUD -------------------------------------------------------------------------------
@@ -33,45 +32,50 @@ def abrir_comanda (nome,data): #check
 def ver_estoque(): #check
     cursor.execute("SELECT * FROM estoque")
     rows = cursor.fetchall()
-    for row in rows:
-        print(f'ID: {row[0]}, Produto: {row[1]}, Tipo: {row[2]}, Quantidade: {row[3]}, Preço: R$ {row[4]}, Preço de venda: R$ {row[5]}')
 
-    con.close()
+    if not rows:
+        return pd.DataFrame()
+
+    else:
+        df = pd.DataFrame(rows,columns=["ID","produto","Tipo","Quantidade","Preco","Preco_venda"])
+        return df
+
+    
+
 
 
 def listar_comandas_abertas(): #check
     cursor.execute("SELECT id,nome, status, data FROM comandas WHERE status = 'aberta'")
     comandas = cursor.fetchall()
 
-    if comandas:
-        print("📋 Comandas abertas:")
-        for id_comanda, nome, status, data in comandas:
-            print(f"- ID: {id_comanda} | Cliente: {nome} | Status: {status} | Data: {data}")
+    if not comandas:
+        return pd.DataFrame()
+    df = pd.DataFrame(comandas,columns=["ID","Nome","Status","Data"])
+    return df
 
-    else:
-            print("✅ Nenhuma comanda aberta no momento.")
-
-    con.close()
-    return
-
+    
 #LISTAR ITENS DE UMA COMANDA ESPECÍFICA
 
 def listar_itens_comanda(id_comanda): #check
     cursor.execute("SELECT produto, quantidade, preco FROM comanda_itens WHERE id_comanda = ?",(id_comanda,))
     itens = cursor.fetchall()
- 
-    if itens:
-        print(f"🧾 Itens da comanda {id_comanda}:")
 
-        for produto, quantidade, preco in itens:
-            print(f"- {produto} x {quantidade} = R${quantidade * preco:.2f}")
-        
-        
+    if not itens:
+        return pd.DataFrame()
     else:
-        print(f"⚠️ Nenhum item encontrado na comanda {id_comanda}")
+        df = pd.DataFrame(itens,columns=["Produto","Quantidade","Preço"])
+        df['Total'] = df["Quantidade"]* df['Preço']
+        return df
+    
+def vendas_see():
+    cursor.execute("SELECT * FROM venda")
+    vendas = cursor.fetchall()
 
-    con.close()
-    return itens
+    if not vendas:
+       return pd.DataFrame()
+    else:
+        df = pd.DataFrame(vendas, columns=["ID","Produto","Quantidade","Preço","Total","Data"])
+        return df    
 
 # U = UPDATE OF CRUD -------------------------------------------------------------------------------------
 
@@ -80,7 +84,6 @@ def update_estoque(estoque_id, new_produto, new_tipo, new_qnd, new_preco, new_pr
     cursor.execute("UPDATE estoque SET produto = ?, tipo = ?, quantidade = ?, preco = ?, preco_venda = ? WHERE id = ?",(new_produto.lower(), new_tipo.lower(), new_qnd, new_preco, new_preco_venda, estoque_id))
     con.commit()
     print(f"Produto ID {estoque_id} Atualizado")
-    con.close()
 
 #ATUALIZANDO COMANDAS
 def atualizar_comandas (id_comanda, produto, quantidade, preco): #CHECK
@@ -97,14 +100,12 @@ def atualizar_comandas (id_comanda, produto, quantidade, preco): #CHECK
         print(f"✅ Adicionado: {produto} x{quantidade} na comanda {id_comanda}")
 
     con.commit()
-    con.close()
 
 #FECHANDO COMANDAS
 def fechar_comanda(id_comanda): #check
     data = datetime.now().strftime("%d-%m-%Y %H:%M")
     cursor.execute("SELECT produto, quantidade, preco FROM comanda_itens WHERE id_comanda = ?", (id_comanda,))
     itens = cursor.fetchall()
-    con.close()
 
     for produto, quantidade, preco in itens:
         total = quantidade * preco
@@ -113,7 +114,6 @@ def fechar_comanda(id_comanda): #check
         cursor.execute("UPDATE comandas SET status = 'fechada' WHERE id = ? ",(id_comanda,))
         con.commit()
     print(f" ❌ Comanda com ID : {id_comanda} foi fechada!")
-    con.close()
 
 
 
@@ -124,22 +124,27 @@ def delete_estoque(estoque_id):  #check
     cursor.execute("DELETE FROM estoque WHERE id = ?",(estoque_id,))
     con.commit()
     print(f'Produto ID {estoque_id} deletado')
-    con.close()
+    
 
 def comanda_clear(id_comanda): #check
     cursor.execute("DELETE FROM comanda_itens WHERE id_comanda = ?",(id_comanda,))
     con.commit()
-    print("Itens limpados com sucesso")
-    con.close()
+    print("Itens limpados com sucesso e comanda apagada")
+
+def comanda_delete(id_comanda): #check
+    cursor.execute("DELETE FROM comandas WHERE id = ?",(id_comanda,))
+    con.commit()
+    print(f"comanda {id_comanda} apagada")
+    
 
 def vendas_clear_all():
     cursor.execute("DELETE FROM venda")
     con.commit()
     print("Vendas apagadas")
-    con.close()
+    
 
 def vendas_clear_select(venda_id):
     cursor.execute("DELETE FROM venda WHERE id = ?",(venda_id,))
     con.commit()
-    con.close()
+    
 

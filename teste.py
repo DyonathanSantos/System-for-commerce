@@ -10,4 +10,5 @@ from crud import *
 #comanda_clear(1)
 #fechar_comanda(1)
 #abrir_comanda("Pedro",7-9-2025)
+#ver_estoque()
 
