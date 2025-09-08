@@ -27,6 +27,12 @@ def abrir_comanda (nome,data): #check
     
     return comanda_id
 
+def criar_venda (produto,quantidade,preco,total,data):
+    data  = datetime.now().strftime("%d-%m-%Y %H:%M")
+    cursor.execute("INSERT INTO venda (produto,quantidade,preco,total,data) VALUES (?, ?, ?, ?, ?)",(produto.upper(),quantidade,preco,total,data,))
+    con.commit()
+    print(f"Venda de {produto} adicionada com sucesso!")
+
 #R = READ OF CRUD -------------------------------------------------------------------------------
 
 def ver_estoque(): #check

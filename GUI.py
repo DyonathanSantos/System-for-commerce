@@ -15,45 +15,44 @@ st.set_page_config(page_title="Bar & Adega", layout="wide")
 st.title("🍺 Bar & Adega - Sistema de Controle")
 
 # Menu lateral
-menu = st.sidebar.radio("📌 Menu", ["Home","Cadastrar Produto no Estoque", "Listar Estoque","Nova Comanda", "Comandas","Adicionando Itens na comanda","Consultar comanda", "Fechando comanda","Apagar","Vendas",])
+menu = st.sidebar.radio("📌 Menu", ["Home","Cadastrar Produto no Estoque", "Vendas individuais","Listar Estoque","Nova Comanda", "Comandas","Adicionando Itens na comanda","Consultar comanda", "Fechando comanda","Apagar","Vendas",])
 
 # ------------------------
 # HOME
 # ------------------------
 
 if menu == "Home":
-    st.markdown("""
-    ### Introdução
-    Olá, seja bem-vindo ao sistema de controle do Bar & Adega!
+   st.markdown("""
+    ## 🎉 Bem-vindo ao Sistema Bar & Adega
 
-    O sistema foi feito para melhorar a agilidade do gerenciamento do local, afim de evitar possíveis complicações para o cliente e para o funcionário,
-    no canto superior esquerdo tem uma seta para abrir o menu lateral, com isso aparecerá 5 menus, ambos com suas respectivas funções, vai ser explicado
-    abaixo cada.
-
-
-    ### O que você pode fazer:
-    - 📦 **Cadastrar produtos** no estoque
-    - 📋 **Listar produtos** e ver quantidades
-    - 📊 **Ver resumo financeiro**
-    - 🖊️ **Gerenciar comandas**
-
-    ---
-    ## 👈 Use o menu lateral para navegar pelo sistema.
-
-
-
-    ---
-    **Cadastrar produtos**: Neste menu vai ser para cadastrar novos produtos ou já existentes, no banco de dados do sistema, para cadastrar é preencher as informações correspondentes
-    ao seus espaços.
-
-    **Listar produtos**: Assim que cadastrar pode já visualiza-lo no menu listar produtos, tanto ver a quantidade, preço e tipo do produto, ao selecionar temos a opção de apagar o produto
-    para adicionar outro ou se for descontinuada a sua venda.
-
-    **Resumo financeiro**: Aqui vamos ter o controle de gastos e ver quanto lucramos, para assim reenvestir no negócio. (Vai ser implementado futuramente filtro para vermos qual produto vende mais e o que menos vende)
-
-    **Gerenciar comandas**: Gerenciamento de comandas, criar-las, fecha-las e modifica-las.
-
+    Este sistema foi criado para facilitar o **gerenciamento do estoque, comandas e vendas** do bar.  
+    Use o menu lateral para navegar entre as opções e manter tudo organizado.
     """)
+
+    # --- Resumos ---
+   col1, col2, col3 = st.columns(3)
+
+    # Total de produtos no estoque
+   df_estoque = ver_estoque()
+   total_produtos = len(df_estoque) if not df_estoque.empty else 0
+
+    # Total de comandas abertas
+   df_comandas = listar_comandas_abertas()
+   total_comandas = len(df_comandas) if not df_comandas.empty else 0
+
+    # Total vendido (exemplo: soma do campo 'Total' das comandas fechadas)
+   df_vendas = pd.read_sql_query("""
+            SELECT SUM(quantidade * preco) as total_vendido
+            FROM comanda_itens
+            WHERE id_comanda IN (SELECT id FROM comandas WHERE status = 'fechada')
+        """,con)
+
+   total_vendido = df_vendas["total_vendido"].iloc[0] if df_vendas["total_vendido"].iloc[0] else 0
+
+    # Mostrar nos cards
+   col1.metric("📦 Produtos no Estoque", total_produtos)
+   col2.metric("🧾 Comandas Abertas", total_comandas)
+   col3.metric("💰 Total Vendido", f"R$ {total_vendido:.2f}")
 
 # ------------------------
 # CADASTRAR
@@ -82,6 +81,26 @@ if menu == "Cadastrar Produto no Estoque":
           st.success(f"✅ Produto '{produto}' atualizado com sucesso!")
        else:
           st.error("❌ Preencha todos os campos antes de atualizar")
+
+# ------------------------
+# VENDAS INDIVIDUAIS
+# ------------------------
+elif menu == "Vendas individuais":
+   st.subheader("Adicionar vendas sem comanda")
+
+   produto = st.text_input("Produto")
+   quantidade = st.number_input("Quantidede", min_value=0, step= 1)
+   preco = st.number_input("Preço", min_value=0.00, step= 0.05)
+   total = st.number_input("Total", min_value= 0.0, step= 0.05)
+   data = st.text_input("Data")
+
+   if st.button("Lançar venda"):  
+    if produto and quantidade and preco:
+        criar_venda(produto,quantidade,preco,total,data)
+        st.success(f"Venda registrada com sucesso!")
+    else:
+        print("Por favor preencher os campos!")
+
 
 # ------------------------
 # LISTAR
@@ -219,7 +238,7 @@ elif menu == "Apagar":
 
 
 # ------------------------
-# RESUMO
+# VENDAS
 # ------------------------
 elif menu == "Vendas":
     st.subheader("📊 Vendas")
