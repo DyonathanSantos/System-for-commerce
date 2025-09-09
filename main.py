@@ -414,10 +414,13 @@ elif menu == "Apagar":
       comanda_delete(id_number)
       st.success(f"O item {id_number} apagado com sucesso!")
    elif  st.button('Excluir venda'):
-      vendas_clear_select()
+      vendas_clear_select(id_number)
+      st.success(f"O item {id_number} apagado com sucesso!")
    elif st.button('EXCLUIR VENDAS!!'):
       vendas_clear_all()
-      st.success(f"O item {id_number} apagado com sucesso!")
+      st.success('VENDAS APAGADAS!')
+      cursor.execute("DELETE FROM comandas WHERE status = 'fechada'")
+      con.commit()
    else:
       st.error('COLOQUE O ID QUE DESEJA APAGAR!')  
 
