@@ -277,7 +277,7 @@ elif menu == "Vendas individuais":
    produto = st.text_input("Produto")
    quantidade = st.number_input("Quantidede", min_value=0, step= 1)
    preco = st.number_input("Preço", min_value=0.00, step= 0.05)
-   total = st.number_input("Total", min_value= 0.0, step= 0.05)
+   total = st.number_input("Preço total", min_value=0.0, step=0.05)
    data = st.text_input("Data")
 
    if st.button("Lançar venda"):  

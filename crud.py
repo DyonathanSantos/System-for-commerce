@@ -30,6 +30,7 @@ def abrir_comanda (nome,data): #check
 def criar_venda (produto,quantidade,preco,total,data):
     data  = datetime.now().strftime("%d-%m-%Y %H:%M")
     cursor.execute("INSERT INTO venda (produto,quantidade,preco,total,data) VALUES (?, ?, ?, ?, ?)",(produto.upper(),quantidade,preco,total,data,))
+    cursor.execute("UPDATE estoque SET quantidade = quantidade - ? WHERE produto = ?",(quantidade, produto))
     con.commit()
     print(f"Venda de {produto} adicionada com sucesso!")
 
