@@ -228,9 +228,8 @@ if menu == "Home":
 
     # Total vendido (exemplo: soma do campo 'Total' das comandas fechadas)
    df_vendas = pd.read_sql_query("""
-            SELECT SUM(quantidade * preco) as total_vendido
-            FROM comanda_itens
-            WHERE id_comanda IN (SELECT id FROM comandas WHERE status = 'fechada')
+            SELECT SUM(total) as total_vendido
+            FROM venda
         """,con)
 
    total_vendido = df_vendas["total_vendido"].iloc[0] if df_vendas["total_vendido"].iloc[0] else 0
@@ -275,7 +274,7 @@ elif menu == "Vendas individuais":
    st.subheader("Adicionar vendas sem comanda")
 
    produto = st.text_input("Produto")
-   quantidade = st.number_input("Quantidede", min_value=0, step= 1)
+   quantidade = st.number_input("Quantidade", min_value=0, step= 1)
    preco = st.number_input("Preço", min_value=0.00, step= 0.05)
    total = st.number_input("Preço total", min_value=0.0, step=0.05)
    data = st.text_input("Data")
