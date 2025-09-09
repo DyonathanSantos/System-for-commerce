@@ -12,7 +12,7 @@ cursor = con.cursor()
 #C = CREATE OF CRUD -------------------------------------------------------------------------------
 
 def adicionar_estoque(produto, tipo, quantidade, preco, preco_venda): #check
-    cursor.execute("INSERT INTO estoque (produto, tipo, quantidade, preco, preco_venda) VALUES (?, ?, ?, ?, ?)",(produto.upper(), tipo.upper(), quantidade, preco, preco_venda))
+    cursor.execute("INSERT INTO estoque (produto, tipo, quantidade, preco, preco_venda) VALUES (?, ?, ?, ?, ?)",(produto.lower(), tipo.lower(), quantidade, preco, preco_venda))
     con.commit()
     print(f"Produto '{produto}' adicionado com sucesso!")
     
